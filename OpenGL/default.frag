@@ -13,14 +13,16 @@ out vec4 FragColor;
 
 void main()
 {
+    vec3 lightDir = normalize(vec3(0.0, 3.0, 2.0) - fragPos);
+    float diff = max(dot(normalize(Normal), lightDir), 0.0);
     vec4 baseColor = texture(tex0, texCoord);
+
     if (useOverrideColor)
     {
-        // Simulacja rozmycia i pó³przezroczystoœci odbicia
-        FragColor = vec4(overrideColor.rgb * baseColor.rgb, 0.5);
+        FragColor = vec4(overrideColor.rgb * baseColor.rgb * diff, 0.5);
     }
     else
     {
-        FragColor = baseColor;
+        FragColor = vec4(baseColor.rgb * diff, 1.0);
     }
 }

@@ -1,205 +1,213 @@
-#include<iostream>
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
-#include<stb/stb_image.h>
-#include<glm/glm.hpp>
-#include<glm/gtc/matrix_transform.hpp>
-#include<glm/gtc/type_ptr.hpp>
-#define _USE_MATH_DEFINES
-#include<math.h>
-#include"Texture.h"
-#include"shaderClass.h"
-#include"VAO.h"
-#include"VBO.h"
-#include"EBO.h"
-#include"Camera.h"
+#include <iostream>
+#include <vector>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <stb/stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include "tiny_obj_loader.h"
+
+#include "Texture.h"
+#include "shaderClass.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
+#include "Camera.h"
 
 const unsigned int width = 800;
 const unsigned int height = 800;
 
-GLfloat vertices[] =
-{
-	-0.5f, -0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 0.0f,  0.0f,  0.0f,  1.0f,
-	 0.5f, -0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 0.0f,  0.0f,  0.0f,  1.0f,
-	 0.5f,  0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 1.0f,  0.0f,  0.0f,  1.0f,
-	-0.5f,  0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
-	 0.5f, -0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
-	 0.5f,  0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-	-0.5f,  0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-
-	-0.5f,  0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-
-	 0.5f,  0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f,  0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-
-	-0.5f,  0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-
-   -0.5f, -0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-	0.5f, -0.5f, -0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-	0.5f, -0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-   -0.5f, -0.5f,  0.5f,  0.83f, 0.70f, 0.44f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+struct Vertex {
+    glm::vec3 position;
+    glm::vec3 color;
+    glm::vec2 texcoord;
+    glm::vec3 normal;
 };
 
-
-GLuint indices[] =
-{
-	0, 1, 2,
-	2, 3, 0,
-	4, 5, 6,
-	6, 7, 4,
-	8, 9, 10,
-	10, 11, 8,
-	12, 13, 14,
-	14, 15, 12,
-	16, 17, 18,
-	18, 19, 16,
-	20, 21, 22,
-	22, 23, 20
-};
-
-GLfloat mirrorVertices[] = {
-	-10.0f, -10.0f, 0.0f,  0.0f, 0.0f, 0.0f,  0.0f,  0.0f,  10.0f,
-	-10.0f,  10.0f, 0.0f,  0.0f, 0.0f, 0.0f,  0.0f,  0.0f,  10.0f,
-	 10.0f,  10.0f, 0.0f,  0.0f, 0.0f, 0.0f,  0.0f,  0.0f,  10.0f,
-	 10.0f, -10.0f, 0.0f,  0.0f, 0.0f, 0.0f,  0.0f,  0.0f,  10.0f,
-};
-
-GLuint mirrorIndices[] = {
-	0, 1, 3,
-	1, 2, 3
-};
-
-int main()
-{
+int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(width, height, "OpenGL Mirror", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+    GLFWwindow* window = glfwCreateWindow(width, height, "Sphere Mirror", NULL, NULL);
+    if (!window) return -1;
     glfwMakeContextCurrent(window);
     gladLoadGL();
     glViewport(0, 0, width, height);
 
-    Shader shaderProgram("default.vert", "default.frag");
+    Shader shader("default.vert", "default.frag");
     Shader mirrorShader("mirror.vert", "mirror.frag");
 
-    VAO VAO1;
-    VAO1.Bind();
-    VBO VBO1(vertices, sizeof(vertices));
-    EBO EBO1(indices, sizeof(indices));
-    VAO1.LinkVBO(VBO1, 0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-    VAO1.LinkVBO(VBO1, 1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-    VAO1.LinkVBO(VBO1, 2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-    VAO1.LinkVBO(VBO1, 3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
-    VAO1.Unbind(); VBO1.Unbind(); EBO1.Unbind();
+    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 3.0f));
+
+    Texture tex("darwizzy.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+    tex.texUnit(shader, "tex0", 0);
+
+    // Wczytaj model kuli
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+    tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "Assets/sphere.obj");
+
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+
+    for (const auto& shape : shapes) {
+        for (const auto& index : shape.mesh.indices) {
+            Vertex v{};
+            v.position = {
+                attrib.vertices[3 * index.vertex_index + 0],
+                attrib.vertices[3 * index.vertex_index + 1],
+                attrib.vertices[3 * index.vertex_index + 2]
+            };
+            v.normal = {
+                attrib.normals[3 * index.normal_index + 0],
+                attrib.normals[3 * index.normal_index + 1],
+                attrib.normals[3 * index.normal_index + 2]
+            };
+            v.texcoord = {
+                attrib.texcoords[2 * index.texcoord_index + 0],
+                attrib.texcoords[2 * index.texcoord_index + 1]
+            };
+            v.color = glm::vec3(1.0f, 1.0f, 1.0f);
+            vertices.push_back(v);
+            indices.push_back(indices.size());
+        }
+    }
+
+    // Przekonwertuj vertex data do float[]
+    std::vector<GLfloat> vertexData;
+    for (const auto& v : vertices) {
+        vertexData.insert(vertexData.end(), {
+            v.position.x, v.position.y, v.position.z,
+            v.color.r, v.color.g, v.color.b,
+            v.texcoord.x, v.texcoord.y,
+            v.normal.x, v.normal.y, v.normal.z
+            });
+    }
+
+    VAO vao;
+    vao.Bind();
+    VBO vbo(vertexData.data(), vertexData.size() * sizeof(GLfloat));
+    EBO ebo(indices.data(), indices.size() * sizeof(GLuint));
+
+    vao.LinkVBO(vbo, 0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(0));
+    vao.LinkVBO(vbo, 1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+    vao.LinkVBO(vbo, 2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
+    vao.LinkVBO(vbo, 3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
+    vao.Unbind();
+
+    // Mirror dane
+    GLfloat mirrorVerts[] = {
+        -10, 0, -10,  1,1,1,  0,0,  0,1,0,
+        -10, 0,  10,  1,1,1,  0,0,  0,1,0,
+         10, 0,  10,  1,1,1,  0,0,  0,1,0,
+         10, 0, -10,  1,1,1,  0,0,  0,1,0
+    };
+    GLuint mirrorIndices[] = {
+        0, 1, 2, 0, 2, 3
+    };
+
+    // Definicje pozycji œcian
+    glm::vec3 wallPositions[] = {
+        { 0, -1.0f, -4 },  // front
+        { 0, -1.0f,  4 },  // back
+        { -4, -1.0f, 0 },  // left
+        { 4, -1.0f,  0 }   // right
+    };
+
+    // Oœ skalowania odbicia dla ka¿dej œciany
+    glm::vec3 reflectionAxis[] = {
+        { 1, 1, -1 },  // front: odbicie Z
+        { 1, 1, -1 },  // back: odbicie Z
+        { -1, 1, 1 },  // left: odbicie X
+        { -1, 1, 1 }   // right: odbicie X
+    };
+
+    // Dostosuj obroty œcian (lewa/prawa musz¹ byæ obrócone)
+    glm::vec3 wallRotations[] = {
+        { 0, 0, 0 },                  // front
+        { 0, glm::radians(180.f), 0 }, // back
+        { 0, glm::radians(90.f), 0 },  // left
+        { 0, glm::radians(-90.f), 0 }  // right
+    };
 
     VAO mirrorVAO;
     mirrorVAO.Bind();
-    VBO mirrorVBO(mirrorVertices, sizeof(mirrorVertices));
+    VBO mirrorVBO(mirrorVerts, sizeof(mirrorVerts));
     EBO mirrorEBO(mirrorIndices, sizeof(mirrorIndices));
-    mirrorVAO.LinkVBO(mirrorVBO, 0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    mirrorVAO.LinkVBO(mirrorVBO, 1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    mirrorVAO.LinkVBO(mirrorVBO, 2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-    mirrorVAO.Unbind(); mirrorVBO.Unbind(); mirrorEBO.Unbind();
+    mirrorVAO.LinkVBO(mirrorVBO, 0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(0));
+    mirrorVAO.LinkVBO(mirrorVBO, 1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+    mirrorVAO.LinkVBO(mirrorVBO, 2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
+    mirrorVAO.Unbind();
 
-    Texture rubicTex("darwizzy.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-    rubicTex.texUnit(shaderProgram, "tex0", 0);
+    glm::mat4 mirrorModel = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0f, -8));  // <-- Przesuniêcie w dó³ i dalej od kuli
+    glm::mat4 sphereModel = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0f, 0));
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    glm::vec3 rubicPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::mat4 rubicModel = glm::translate(glm::mat4(1.0f), rubicPos);
-
-    glm::vec3 mirrorPos = glm::vec3(0.0f, 0.0f, -2.5f);
-    glm::mat4 mirrorModel = glm::translate(glm::mat4(1.0f), mirrorPos);
-
-    while (!glfwWindowShouldClose(window))
-    {
-        glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+    while (!glfwWindowShouldClose(window)) {
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
-        glDisable(GL_DEPTH_TEST);                            
-        glEnable(GL_STENCIL_TEST);                           
-        glClear(GL_STENCIL_BUFFER_BIT);                      
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);                  
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);           
+        for (int i = 0; i < 4; ++i) {
+            glStencilFunc(GL_ALWAYS, 1 + i, 0xFF);
+            glStencilMask(0xFF);
 
-        mirrorShader.Activate();
-        camera.Matrix(mirrorShader, "camMatrix");
-        glUniformMatrix4fv(glGetUniformLocation(mirrorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(mirrorModel));
-        glUniform3f(glGetUniformLocation(mirrorShader.ID, "overrideColor"), 0.4f, 0.4f, 0.4f);
-        mirrorVAO.Bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        mirrorVAO.Unbind();
+            glm::mat4 wallModel = glm::mat4(1.0f);
+            wallModel = glm::translate(wallModel, wallPositions[i]);
+            wallModel = glm::rotate(wallModel, wallRotations[i].y, glm::vec3(0, 1, 0));
 
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);     
-        glEnable(GL_DEPTH_TEST);                             
-        glStencilFunc(GL_EQUAL, 1, 0xFF);                    
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);             
+            glUseProgram(0);
+            mirrorVAO.Bind();
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
 
-        shaderProgram.Activate();
-        camera.Matrix(shaderProgram, "camMatrix");
+        for (int i = 0; i < 4; ++i) {
+            glStencilFunc(GL_EQUAL, 1 + i, 0xFF);
+            glStencilMask(0x00);
 
-        glm::mat4 reflectionModel = glm::mat4(1.0f);
-        reflectionModel = glm::translate(reflectionModel, mirrorPos);
-        reflectionModel = glm::scale(reflectionModel, glm::vec3(1.0f, 1.0f, -1.0f));
-        reflectionModel = glm::translate(reflectionModel, -mirrorPos);
+            shader.Activate();
+            camera.Matrix(shader, "camMatrix");
 
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(reflectionModel));
-        glUniform1i(glGetUniformLocation(shaderProgram.ID, "useOverrideColor"), GL_TRUE);
-        glUniform4f(glGetUniformLocation(shaderProgram.ID, "overrideColor"), 0.4f, 0.4f, 0.4f, 0.5f);
+            glm::mat4 reflect = glm::translate(glm::mat4(1.0f), wallPositions[i])
+                * glm::scale(glm::mat4(1.0f), reflectionAxis[i])
+                * glm::translate(glm::mat4(1.0f), -wallPositions[i]);
 
-        rubicTex.Bind();
-        VAO1.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
-        VAO1.Unbind();
-        rubicTex.Unbind();
+            glm::mat4 reflectedModel = reflect * sphereModel;
 
-       
+            glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(reflectedModel));
+            glUniform1i(glGetUniformLocation(shader.ID, "useOverrideColor"), true);
+            glUniform4f(glGetUniformLocation(shader.ID, "overrideColor"), 0.2f, 0.4f, 1.0f, 0.5f);
+            tex.Bind();
+            vao.Bind();
+            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        }
+
+
         glDisable(GL_STENCIL_TEST);
-
-        shaderProgram.Activate();
-        camera.Matrix(shaderProgram, "camMatrix");
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(rubicModel));
-        glUniform1i(glGetUniformLocation(shaderProgram.ID, "useOverrideColor"), GL_FALSE);
-
-        rubicTex.Bind();
-        VAO1.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
-        VAO1.Unbind();
-        rubicTex.Unbind();
+        shader.Activate();
+        camera.Matrix(shader, "camMatrix");
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(sphereModel));
+        glUniform1i(glGetUniformLocation(shader.ID, "useOverrideColor"), false);
+        tex.Bind();
+        vao.Bind();
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    VAO1.Delete(); VBO1.Delete(); EBO1.Delete();
+    vao.Delete(); vbo.Delete(); ebo.Delete();
     mirrorVAO.Delete(); mirrorVBO.Delete(); mirrorEBO.Delete();
-    rubicTex.Delete(); shaderProgram.Delete(); mirrorShader.Delete();
+    shader.Delete(); mirrorShader.Delete(); tex.Delete();
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
