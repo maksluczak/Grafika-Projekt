@@ -1,10 +1,10 @@
 #version 330 core
 
-uniform vec3 overrideColor;
-
 out vec4 FragColor;
 
-void main()
-{
-    FragColor = vec4(overrideColor, 0.4);
+in vec4 vertexColor; // Receives the mirror color from vertex shader
+in vec2 texCoord;
+
+void main() {
+    FragColor = vertexColor;
 }

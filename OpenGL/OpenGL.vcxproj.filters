@@ -96,5 +96,14 @@
     <Image Include="darwizzy.png">
       <Filter>Source Files</Filter>
     </Image>
+    <Image Include="biala_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="czerwona_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="zielona_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

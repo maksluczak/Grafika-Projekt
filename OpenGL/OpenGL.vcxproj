@@ -163,7 +163,10 @@
     <None Include="mirror.vert" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="biala_kula.png" />
+    <Image Include="czerwona_kula.png" />
     <Image Include="darwizzy.png" />
+    <Image Include="zielona_kula.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
