@@ -91,6 +91,12 @@
     <None Include="mirror.vert">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="background.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="background.frag">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="darwizzy.png">
@@ -103,6 +109,18 @@
       <Filter>Source Files</Filter>
     </Image>
     <Image Include="zielona_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="niebieska_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="pomaranczowa_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="rozowa_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="zolta_kula.png">
       <Filter>Source Files</Filter>
     </Image>
   </ItemGroup>

@@ -81,7 +81,6 @@ int main() {
 
     glm::vec3 lightPos(2.0f, 4.0f, 2.0f);
     glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-    // Initial light position and color for the regular scene
     glUniform3fv(glGetUniformLocation(shader.ID, "light.position"), 1, glm::value_ptr(lightPos));
     glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor));
 
@@ -118,7 +117,6 @@ int main() {
         std::cin.get();
         return -1;
     }
-
 
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
@@ -199,7 +197,6 @@ int main() {
     lightEBO.Unbind();
 
     GLfloat mirrorVertices[] = {
-        // Positions        // Colors       // TexCoords // Normals
         -5.0f, mirrorYPosition, -5.0f,  1.0f, 1.0f, 1.0f,  0.0f, 0.0f,  0.0f, 1.0f, 0.0f,
          5.0f, mirrorYPosition, -5.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
          5.0f, mirrorYPosition,  5.0f,  1.0f, 1.0f, 1.0f,  1.0f, 1.0f,  0.0f, 1.0f, 0.0f,
@@ -224,9 +221,13 @@ int main() {
 
 
     std::vector<Sphere> spheres = {
-        { glm::vec3(-3.5f, 0.0f, 0.0f), 3.0f, 0.5f, 1.5f, "czerwona_kula.png", GL_RGBA },
+        { glm::vec3(-3.5f, 0.0f, 7.0f), 3.0f, 0.5f, 1.5f, "czerwona_kula.png", GL_RGBA },
         { glm::vec3(0.0f, 0.0f, 0.0f), 4.0f, 0.8f, 2.0f, "zielona_kula.png", GL_RGBA },
-        { glm::vec3(3.5f, 0.0f, 0.0f), 5.0f, 1.2f, 2.5f, "biala_kula.png", GL_RGBA }
+        { glm::vec3(3.5f, 0.0f, 4.0f), 5.0f, 1.2f, 2.5f, "biala_kula.png", GL_RGBA },
+        { glm::vec3(-2.5f, 0.0f, -3.0f), 2.5f, 0.6f, 1.8f, "niebieska_kula.png", GL_RGBA },
+        { glm::vec3(1.5f, 0.0f, -2.0f), 3.5f, 1.0f, 2.2f, "zolta_kula.png", GL_RGBA },
+        { glm::vec3(4.0f, 0.0f, -4.5f), 4.2f, 1.4f, 2.8f, "rozowa_kula.png", GL_RGBA },
+        { glm::vec3(-4.0f, 0.0f, 2.0f), 3.0f, 0.7f, 1.9f, "pomaranczowa_kula.png", GL_RGBA }
     };
 
     const float gravity = -9.81f;
@@ -243,19 +244,17 @@ int main() {
 
         for (auto& s : spheres) s.update(dt, gravity);
 
-        // Render original scene
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         camera.Inputs(window);
         camera.updateMatrix(45.f, 0.1f, 100.f);
 
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK); // Default culling for original objects
+        glCullFace(GL_BACK); 
 
         shader.Activate();
         camera.Matrix(shader, "camMatrix");
-        glUniform1i(glGetUniformLocation(shader.ID, "useOverrideColor"), 0); // Ensure not to override color
+        glUniform1i(glGetUniformLocation(shader.ID, "useOverrideColor"), 0); 
 
-        // Set original light position for normal objects
         glUniform3fv(glGetUniformLocation(shader.ID, "light.position"), 1, glm::value_ptr(lightPos));
         glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor));
 
@@ -276,14 +275,10 @@ int main() {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         lightVAO.Unbind();
 
-
-        // --- Mirror Rendering ---
-
-        // 1. Draw mirror to stencil buffer
-        glDisable(GL_DEPTH_TEST); // Disable depth testing for stencil pass
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Disable writing to color buffer
-        glStencilFunc(GL_ALWAYS, 1, 0xFF); // Always pass, set stencil value to 1
-        glStencilMask(0xFF); // Enable writing to stencil buffer
+        glDisable(GL_DEPTH_TEST); 
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
+        glStencilFunc(GL_ALWAYS, 1, 0xFF); 
+        glStencilMask(0xFF); 
 
         mirrorShader.Activate();
         camera.Matrix(mirrorShader, "camMatrix");
@@ -293,29 +288,26 @@ int main() {
         glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         mirrorVAO.Unbind();
 
-        // 2. Render reflected objects with reflected light
-        glEnable(GL_DEPTH_TEST); // Re-enable depth testing
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Re-enable writing to color buffer
-        glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass only if stencil value is 1
-        glStencilMask(0x00); // Disable writing to stencil buffer (read-only)
+        glEnable(GL_DEPTH_TEST); 
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
+        glStencilFunc(GL_EQUAL, 1, 0xFF); 
+        glStencilMask(0x00); 
 
-        glCullFace(GL_FRONT); // Cull front faces for reflected objects (inside-out)
+        glCullFace(GL_FRONT); 
 
         shader.Activate();
         camera.Matrix(shader, "camMatrix");
 
-        // Reflect the light position
         glm::vec3 reflectedLightPos = lightPos;
-        reflectedLightPos.y = mirrorYPosition - (lightPos.y - mirrorYPosition); // Reflect Y coordinate across the mirror plane
+        reflectedLightPos.y = mirrorYPosition - (lightPos.y - mirrorYPosition);
         glUniform3fv(glGetUniformLocation(shader.ID, "light.position"), 1, glm::value_ptr(reflectedLightPos));
-        glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor)); // Light color remains the same
+        glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor));
 
 
         vao.Bind();
         for (auto& s : spheres) {
             glm::mat4 reflectedModel = glm::translate(glm::mat4(1.0f), s.offset + glm::vec3(0, s.sphereY, 0));
             reflectedModel = glm::scale(reflectedModel, glm::vec3(s.scale));
-            // Apply reflection around the mirror plane
             reflectedModel = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f * mirrorYPosition, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f)), glm::vec3(1.0f)) * reflectedModel;
             glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(reflectedModel));
             s.sphereTexture.Bind();
@@ -323,22 +315,20 @@ int main() {
         }
         vao.Unbind();
 
-
-        // 3. Render the mirror surface (with blending for translucency)
-        glDisable(GL_STENCIL_TEST); // Disable stencil test for drawing the mirror itself
+        glDisable(GL_STENCIL_TEST); 
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Standard alpha blending
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         mirrorShader.Activate();
         camera.Matrix(mirrorShader, "camMatrix");
         glUniformMatrix4fv(glGetUniformLocation(mirrorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(mirrorModel));
-        glUniform4f(glGetUniformLocation(mirrorShader.ID, "mirrorColor"), 0.5f, 0.5f, 0.7f, 0.4f); // Semi-transparent blueish mirror
+        glUniform4f(glGetUniformLocation(mirrorShader.ID, "mirrorColor"), 0.5f, 0.5f, 0.7f, 0.4f); // <- to jest to dziwne lustro co jak zerkniesz od do³u jest niebieskie, a od góry niewidoczne 
         mirrorVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         mirrorVAO.Unbind();
 
         glDisable(GL_BLEND);
-        glCullFace(GL_BACK); // Reset culling for next frame
+        glCullFace(GL_BACK); 
 
         glfwSwapBuffers(window);
         glfwPollEvents();
