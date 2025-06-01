@@ -2,7 +2,7 @@
 #include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb/stb_image.h> // Upewnij siê, ¿e masz to do ³adowania obrazów
+#include <stb/stb_image.h> 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -26,7 +26,6 @@ struct Vertex {
     glm::vec3 normal;
 };
 
-// Funkcja do ³adowania tekstury
 unsigned int loadTexture(const char* path) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -61,7 +60,6 @@ unsigned int loadTexture(const char* path) {
     return textureID;
 }
 
-
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -77,13 +75,11 @@ int main() {
     glfwMakeContextCurrent(window);
     gladLoadGL();
     glViewport(0, 0, WIDTH, HEIGHT);
-    // glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Usuniête, t³o bêdzie rysowane tekstur¹
 
-    // Inicjalizacja shaderów
     Shader shader("default.vert", "default.frag");
     Shader lightShader("light.vert", "light.frag");
     Shader mirrorShader("mirror.vert", "mirror.frag");
-    Shader backgroundShader("background.vert", "background.frag"); // Nowy shader dla t³a
+    Shader backgroundShader("background.vert", "background.frag");
 
     Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -197,13 +193,11 @@ int main() {
     mirrorVBO.Unbind();
     mirrorEBO.Unbind();
 
-    // --- Dane dla t³a ---
     GLfloat backgroundVertices[] = {
-        // Pozycje     // Tekstury
-        -1.0f,  1.0f,  0.0f, 1.0f, // Top-left
-         1.0f,  1.0f,  1.0f, 1.0f, // Top-right
-         1.0f, -1.0f,  1.0f, 0.0f, // Bottom-right
-        -1.0f, -1.0f,  0.0f, 0.0f  // Bottom-left
+        -1.0f,  1.0f,  0.0f, 1.0f, 
+         1.0f,  1.0f,  1.0f, 1.0f, 
+         1.0f, -1.0f,  1.0f, 0.0f, 
+        -1.0f, -1.0f,  0.0f, 0.0f  
     };
     GLuint backgroundIndices[] = {
         0, 1, 2,
@@ -214,13 +208,13 @@ int main() {
     backgroundVAO.Bind();
     VBO backgroundVBO(backgroundVertices, sizeof(backgroundVertices));
     EBO backgroundEBO(backgroundIndices, sizeof(backgroundIndices));
-    backgroundVAO.LinkVBO(backgroundVBO, 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0); // Tylko pozycja X, Y
-    backgroundVAO.LinkVBO(backgroundVBO, 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); // Wspó³rzêdne tekstury
+    backgroundVAO.LinkVBO(backgroundVBO, 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0); 
+    backgroundVAO.LinkVBO(backgroundVBO, 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); 
     backgroundVAO.Unbind();
     backgroundVBO.Unbind();
     backgroundEBO.Unbind();
 
-    unsigned int backgroundTexture = loadTexture("space.png"); // Za³aduj teksturê t³a
+    unsigned int backgroundTexture = loadTexture("space.png"); 
 
 
     std::vector<Sphere> spheres = {
@@ -249,14 +243,13 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        // --- Rysowanie t³a na pocz¹tku klatki ---
-        glDisable(GL_DEPTH_TEST); // Wy³¹cz test g³êbi, aby t³o by³o rysowane zawsze na samym koñcu
+        glDisable(GL_DEPTH_TEST);
         backgroundShader.Activate();
         glBindTexture(GL_TEXTURE_2D, backgroundTexture);
         backgroundVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(backgroundIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         backgroundVAO.Unbind();
-        glEnable(GL_DEPTH_TEST); // W³¹cz test g³êbi z powrotem dla innych obiektów
+        glEnable(GL_DEPTH_TEST); 
 
         camera.Inputs(window);
         camera.updateMatrix(45.f, 0.1f, 100.f);
@@ -347,7 +340,6 @@ int main() {
         glfwPollEvents();
     }
 
-    // Usuniêcie obiektów OpenGL
     vao.Delete(); vbo.Delete(); ebo.Delete();
     shader.Delete();
 
@@ -357,9 +349,9 @@ int main() {
     mirrorVAO.Delete(); mirrorVBO.Delete(); mirrorEBO.Delete();
     mirrorShader.Delete();
 
-    backgroundVAO.Delete(); backgroundVBO.Delete(); backgroundEBO.Delete(); // Usuniêcie obiektów t³a
-    glDeleteTextures(1, &backgroundTexture); // Usuniêcie tekstury t³a
-    backgroundShader.Delete(); // Usuniêcie shadera t³a
+    backgroundVAO.Delete(); backgroundVBO.Delete(); backgroundEBO.Delete();
+    glDeleteTextures(1, &backgroundTexture); 
+    backgroundShader.Delete(); 
 
     glfwDestroyWindow(window);
     glfwTerminate();
