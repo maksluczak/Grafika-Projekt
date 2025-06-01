@@ -45,6 +45,9 @@
     <ClCompile Include="..\..\..\Downloads\tinyobjloader-release\tinyobjloader-release\tiny_obj_loader.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Downloads\tinyobjloader-release\tinyobjloader-release\tiny_obj_loader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -121,6 +127,9 @@
       <Filter>Source Files</Filter>
     </Image>
     <Image Include="zolta_kula.png">
+      <Filter>Source Files</Filter>
+    </Image>
+    <Image Include="space.png">
       <Filter>Source Files</Filter>
     </Image>
   </ItemGroup>

@@ -2,7 +2,7 @@
 #include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb/stb_image.h>
+#include <stb/stb_image.h> // Upewnij siê, ¿e masz to do ³adowania obrazów
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,6 +14,7 @@
 #include "VBO.h"
 #include "EBO.h"
 #include "Camera.h"
+#include "Sphere.h"
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
@@ -25,34 +26,41 @@ struct Vertex {
     glm::vec3 normal;
 };
 
-class Sphere {
-public:
-    glm::vec3 offset;
-    float sphereY;
-    float velocityY;
-    float maxHeight;
-    float scale;
-    Texture sphereTexture;
+// Funkcja do ³adowania tekstury
+unsigned int loadTexture(const char* path) {
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
 
-    Sphere(const glm::vec3& ofs, float startH, float scale_, float maxH, const char* texturePath, GLenum format)
-        : offset(ofs), sphereY(startH), velocityY(0.0f),
-        maxHeight(maxH), scale(scale_),
-        sphereTexture(texturePath, GL_TEXTURE_2D, GL_TEXTURE0, format, GL_UNSIGNED_BYTE) {
+    int width, height, nrComponents;
+    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data) {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else {
+        std::cerr << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
     }
 
-    void update(float dt, float gravity) {
-        velocityY += gravity * dt;
-        sphereY += velocityY * dt;
+    return textureID;
+}
 
-        float floorY = -1.0f;
-        float currentRadius = this->scale;
-
-        if (sphereY - currentRadius < floorY) {
-            sphereY = floorY + currentRadius;
-            velocityY = std::sqrt(2.0f * -gravity * maxHeight);
-        }
-    }
-};
 
 int main() {
     glfwInit();
@@ -69,11 +77,14 @@ int main() {
     glfwMakeContextCurrent(window);
     gladLoadGL();
     glViewport(0, 0, WIDTH, HEIGHT);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Usuniête, t³o bêdzie rysowane tekstur¹
 
+    // Inicjalizacja shaderów
     Shader shader("default.vert", "default.frag");
     Shader lightShader("light.vert", "light.frag");
     Shader mirrorShader("mirror.vert", "mirror.frag");
+    Shader backgroundShader("background.vert", "background.frag"); // Nowy shader dla t³a
+
     Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 
     shader.Activate();
@@ -93,30 +104,6 @@ int main() {
     std::string warn, err;
 
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "Assets/new_sphere.obj");
-
-    if (!warn.empty()) {
-        std::cerr << "TinyOBJLoader Warning: " << warn << std::endl;
-    }
-    if (!err.empty()) {
-        std::cerr << "TinyOBJLoader Error: " << err << std::endl;
-    }
-    if (!ret) {
-        std::cerr << "Blad: Nie mozna wczytac modelu 'Assets/new_sphere.obj'!" << std::endl;
-        glfwTerminate();
-        std::cin.get();
-        return -1;
-    }
-
-    if (attrib.vertices.empty() || attrib.normals.empty() || attrib.texcoords.empty() || shapes.empty()) {
-        std::cerr << "Blad: Model 'new_sphere.obj' jest pusty lub brakuje atrybutow!" << std::endl;
-        std::cerr << "Vertices size: " << attrib.vertices.size() << std::endl;
-        std::cerr << "Normals size: " << attrib.normals.size() << std::endl;
-        std::cerr << "Texcoords size: " << attrib.texcoords.size() << std::endl;
-        std::cerr << "Shapes size: " << shapes.size() << std::endl;
-        glfwTerminate();
-        std::cin.get();
-        return -1;
-    }
 
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
@@ -156,15 +143,6 @@ int main() {
             vertices.push_back(v);
             indices.push_back(vertices.size() - 1);
         }
-    }
-
-    if (vertices.empty() || indices.empty()) {
-        std::cerr << "Blad: Wektory 'vertices' lub 'indices' sa puste po parsowaniu OBJ!" << std::endl;
-        std::cerr << "Vertices count: " << vertices.size() << std::endl;
-        std::cerr << "Indices count: " << indices.size() << std::endl;
-        glfwTerminate();
-        std::cin.get();
-        return -1;
     }
 
     std::vector<GLfloat> vertexData;
@@ -219,6 +197,31 @@ int main() {
     mirrorVBO.Unbind();
     mirrorEBO.Unbind();
 
+    // --- Dane dla t³a ---
+    GLfloat backgroundVertices[] = {
+        // Pozycje     // Tekstury
+        -1.0f,  1.0f,  0.0f, 1.0f, // Top-left
+         1.0f,  1.0f,  1.0f, 1.0f, // Top-right
+         1.0f, -1.0f,  1.0f, 0.0f, // Bottom-right
+        -1.0f, -1.0f,  0.0f, 0.0f  // Bottom-left
+    };
+    GLuint backgroundIndices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    VAO backgroundVAO;
+    backgroundVAO.Bind();
+    VBO backgroundVBO(backgroundVertices, sizeof(backgroundVertices));
+    EBO backgroundEBO(backgroundIndices, sizeof(backgroundIndices));
+    backgroundVAO.LinkVBO(backgroundVBO, 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0); // Tylko pozycja X, Y
+    backgroundVAO.LinkVBO(backgroundVBO, 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); // Wspó³rzêdne tekstury
+    backgroundVAO.Unbind();
+    backgroundVBO.Unbind();
+    backgroundEBO.Unbind();
+
+    unsigned int backgroundTexture = loadTexture("space.png"); // Za³aduj teksturê t³a
+
 
     std::vector<Sphere> spheres = {
         { glm::vec3(-3.5f, 0.0f, 7.0f), 3.0f, 0.5f, 1.5f, "czerwona_kula.png", GL_RGBA },
@@ -245,15 +248,25 @@ int main() {
         for (auto& s : spheres) s.update(dt, gravity);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        // --- Rysowanie t³a na pocz¹tku klatki ---
+        glDisable(GL_DEPTH_TEST); // Wy³¹cz test g³êbi, aby t³o by³o rysowane zawsze na samym koñcu
+        backgroundShader.Activate();
+        glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+        backgroundVAO.Bind();
+        glDrawElements(GL_TRIANGLES, sizeof(backgroundIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
+        backgroundVAO.Unbind();
+        glEnable(GL_DEPTH_TEST); // W³¹cz test g³êbi z powrotem dla innych obiektów
+
         camera.Inputs(window);
         camera.updateMatrix(45.f, 0.1f, 100.f);
 
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK); 
+        glCullFace(GL_BACK);
 
         shader.Activate();
         camera.Matrix(shader, "camMatrix");
-        glUniform1i(glGetUniformLocation(shader.ID, "useOverrideColor"), 0); 
+        glUniform1i(glGetUniformLocation(shader.ID, "useOverrideColor"), 0);
 
         glUniform3fv(glGetUniformLocation(shader.ID, "light.position"), 1, glm::value_ptr(lightPos));
         glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor));
@@ -275,10 +288,10 @@ int main() {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         lightVAO.Unbind();
 
-        glDisable(GL_DEPTH_TEST); 
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
-        glStencilFunc(GL_ALWAYS, 1, 0xFF); 
-        glStencilMask(0xFF); 
+        glDisable(GL_DEPTH_TEST);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
 
         mirrorShader.Activate();
         camera.Matrix(mirrorShader, "camMatrix");
@@ -288,12 +301,12 @@ int main() {
         glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         mirrorVAO.Unbind();
 
-        glEnable(GL_DEPTH_TEST); 
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
-        glStencilFunc(GL_EQUAL, 1, 0xFF); 
-        glStencilMask(0x00); 
+        glEnable(GL_DEPTH_TEST);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glStencilFunc(GL_EQUAL, 1, 0xFF);
+        glStencilMask(0x00);
 
-        glCullFace(GL_FRONT); 
+        glCullFace(GL_FRONT);
 
         shader.Activate();
         camera.Matrix(shader, "camMatrix");
@@ -315,25 +328,26 @@ int main() {
         }
         vao.Unbind();
 
-        glDisable(GL_STENCIL_TEST); 
+        glDisable(GL_STENCIL_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         mirrorShader.Activate();
         camera.Matrix(mirrorShader, "camMatrix");
         glUniformMatrix4fv(glGetUniformLocation(mirrorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(mirrorModel));
-        glUniform4f(glGetUniformLocation(mirrorShader.ID, "mirrorColor"), 0.5f, 0.5f, 0.7f, 0.4f); // <- to jest to dziwne lustro co jak zerkniesz od do³u jest niebieskie, a od góry niewidoczne 
+        glUniform4f(glGetUniformLocation(mirrorShader.ID, "mirrorColor"), 0.5f, 0.5f, 0.7f, 0.4f);
         mirrorVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         mirrorVAO.Unbind();
 
         glDisable(GL_BLEND);
-        glCullFace(GL_BACK); 
+        glCullFace(GL_BACK);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    // Usuniêcie obiektów OpenGL
     vao.Delete(); vbo.Delete(); ebo.Delete();
     shader.Delete();
 
@@ -342,6 +356,10 @@ int main() {
 
     mirrorVAO.Delete(); mirrorVBO.Delete(); mirrorEBO.Delete();
     mirrorShader.Delete();
+
+    backgroundVAO.Delete(); backgroundVBO.Delete(); backgroundEBO.Delete(); // Usuniêcie obiektów t³a
+    glDeleteTextures(1, &backgroundTexture); // Usuniêcie tekstury t³a
+    backgroundShader.Delete(); // Usuniêcie shadera t³a
 
     glfwDestroyWindow(window);
     glfwTerminate();

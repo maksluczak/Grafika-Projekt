@@ -139,6 +139,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shaderClass.cpp" />
+    <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VAO.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EBO.h" />
     <ClInclude Include="shaderClass.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VAO.h" />
     <ClInclude Include="VBO.h" />
@@ -171,6 +173,7 @@
     <Image Include="niebieska_kula.png" />
     <Image Include="pomaranczowa_kula.png" />
     <Image Include="rozowa_kula.png" />
+    <Image Include="space.png" />
     <Image Include="zielona_kula.png" />
     <Image Include="zolta_kula.png" />
   </ItemGroup>
