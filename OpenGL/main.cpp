@@ -2,12 +2,14 @@
 #include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb/stb_image.h> 
+#include <stb/stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "tiny_obj_loader.h"
 
+#include "Vertex.h"
+#include "TextureLoader.h"
 #include "Texture.h"
 #include "shaderClass.h"
 #include "VAO.h"
@@ -18,47 +20,6 @@
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
-
-struct Vertex {
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::vec2 texcoord;
-    glm::vec3 normal;
-};
-
-unsigned int loadTexture(const char* path) {
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data) {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else {
-        std::cerr << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
 
 int main() {
     glfwInit();
@@ -79,7 +40,6 @@ int main() {
     Shader shader("default.vert", "default.frag");
     Shader lightShader("light.vert", "light.frag");
     Shader mirrorShader("mirror.vert", "mirror.frag");
-    Shader backgroundShader("background.vert", "background.frag");
 
     Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -87,6 +47,7 @@ int main() {
     glUniform1i(glGetUniformLocation(shader.ID, "tex0"), 0);
 
     glm::vec3 lightPos(2.0f, 4.0f, 2.0f);
+    glm::vec3 lightVelocity(0.0f, 0.0f, 0.0f);
     glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
     glUniform3fv(glGetUniformLocation(shader.ID, "light.position"), 1, glm::value_ptr(lightPos));
     glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor));
@@ -193,30 +154,6 @@ int main() {
     mirrorVBO.Unbind();
     mirrorEBO.Unbind();
 
-    GLfloat backgroundVertices[] = {
-        -1.0f,  1.0f,  0.0f, 1.0f, 
-         1.0f,  1.0f,  1.0f, 1.0f, 
-         1.0f, -1.0f,  1.0f, 0.0f, 
-        -1.0f, -1.0f,  0.0f, 0.0f  
-    };
-    GLuint backgroundIndices[] = {
-        0, 1, 2,
-        0, 2, 3
-    };
-
-    VAO backgroundVAO;
-    backgroundVAO.Bind();
-    VBO backgroundVBO(backgroundVertices, sizeof(backgroundVertices));
-    EBO backgroundEBO(backgroundIndices, sizeof(backgroundIndices));
-    backgroundVAO.LinkVBO(backgroundVBO, 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0); 
-    backgroundVAO.LinkVBO(backgroundVBO, 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); 
-    backgroundVAO.Unbind();
-    backgroundVBO.Unbind();
-    backgroundEBO.Unbind();
-
-    unsigned int backgroundTexture = loadTexture("space.png"); 
-
-
     std::vector<Sphere> spheres = {
         { glm::vec3(-3.5f, 0.0f, 7.0f), 3.0f, 0.5f, 1.5f, "czerwona_kula.png", GL_RGBA },
         { glm::vec3(0.0f, 0.0f, 0.0f), 4.0f, 0.8f, 2.0f, "zielona_kula.png", GL_RGBA },
@@ -237,19 +174,21 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         float now = (float)glfwGetTime();
         float dt = now - lastTime;
+        lightVelocity.y += gravity * dt;
+        lightPos.y += lightVelocity.y * dt;
+
+        const float bounceFactor = 1.0f;
+
+        if (lightPos.y < mirrorYPosition) {
+            lightPos.y = mirrorYPosition;
+            lightVelocity.y *= -bounceFactor;
+        }
         lastTime = now;
 
         for (auto& s : spheres) s.update(dt, gravity);
 
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        glDisable(GL_DEPTH_TEST);
-        backgroundShader.Activate();
-        glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-        backgroundVAO.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(backgroundIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
-        backgroundVAO.Unbind();
-        glEnable(GL_DEPTH_TEST); 
 
         camera.Inputs(window);
         camera.updateMatrix(45.f, 0.1f, 100.f);
@@ -290,6 +229,7 @@ int main() {
         camera.Matrix(mirrorShader, "camMatrix");
         glm::mat4 mirrorModel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, mirrorYPosition, 0.0f));
         glUniformMatrix4fv(glGetUniformLocation(mirrorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(mirrorModel));
+        glUniform4f(glGetUniformLocation(mirrorShader.ID, "mirrorColor"), 0.5f, 0.5f, 0.7f, 0.4f);
         mirrorVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         mirrorVAO.Unbind();
@@ -309,7 +249,6 @@ int main() {
         glUniform3fv(glGetUniformLocation(shader.ID, "light.position"), 1, glm::value_ptr(reflectedLightPos));
         glUniform3fv(glGetUniformLocation(shader.ID, "light.color"), 1, glm::value_ptr(lightColor));
 
-
         vao.Bind();
         for (auto& s : spheres) {
             glm::mat4 reflectedModel = glm::translate(glm::mat4(1.0f), s.offset + glm::vec3(0, s.sphereY, 0));
@@ -320,6 +259,17 @@ int main() {
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         }
         vao.Unbind();
+
+        lightShader.Activate();
+        camera.Matrix(lightShader, "camMatrix");
+        reflectedLightPos = lightPos;
+        reflectedLightPos.y = mirrorYPosition - (lightPos.y - mirrorYPosition);
+        glm::mat4 reflectedLightModel = glm::translate(glm::mat4(1.0f), reflectedLightPos) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(reflectedLightModel));
+        lightVAO.Bind();
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        lightVAO.Unbind();
 
         glDisable(GL_STENCIL_TEST);
         glEnable(GL_BLEND);
@@ -348,10 +298,6 @@ int main() {
 
     mirrorVAO.Delete(); mirrorVBO.Delete(); mirrorEBO.Delete();
     mirrorShader.Delete();
-
-    backgroundVAO.Delete(); backgroundVBO.Delete(); backgroundEBO.Delete();
-    glDeleteTextures(1, &backgroundTexture); 
-    backgroundShader.Delete(); 
 
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -142,6 +142,7 @@
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureLoader.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
@@ -153,12 +154,12 @@
     <ClInclude Include="shaderClass.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="VAO.h" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="background.frag" />
-    <None Include="background.vert" />
     <None Include="default.frag" />
     <None Include="default.vert" />
     <None Include="light.frag" />
@@ -169,11 +170,9 @@
   <ItemGroup>
     <Image Include="biala_kula.png" />
     <Image Include="czerwona_kula.png" />
-    <Image Include="darwizzy.png" />
     <Image Include="niebieska_kula.png" />
     <Image Include="pomaranczowa_kula.png" />
     <Image Include="rozowa_kula.png" />
-    <Image Include="space.png" />
     <Image Include="zielona_kula.png" />
     <Image Include="zolta_kula.png" />
   </ItemGroup>

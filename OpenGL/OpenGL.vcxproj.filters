@@ -48,6 +48,9 @@
     <ClCompile Include="Sphere.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -77,6 +80,12 @@
     <ClInclude Include="Sphere.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureLoader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="default.frag">
@@ -97,17 +106,8 @@
     <None Include="mirror.vert">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="background.vert">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="background.frag">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="darwizzy.png">
-      <Filter>Source Files</Filter>
-    </Image>
     <Image Include="biala_kula.png">
       <Filter>Source Files</Filter>
     </Image>
@@ -127,9 +127,6 @@
       <Filter>Source Files</Filter>
     </Image>
     <Image Include="zolta_kula.png">
-      <Filter>Source Files</Filter>
-    </Image>
-    <Image Include="space.png">
       <Filter>Source Files</Filter>
     </Image>
   </ItemGroup>
