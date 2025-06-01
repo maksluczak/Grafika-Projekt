@@ -98,7 +98,7 @@ int main() {
             v.color = glm::vec3(1.0f);
 
             vertices.push_back(v);
-            indices.push_back(vertices.size() - 1);
+            indices.push_back(static_cast<GLuint>(vertices.size() - 1));
         }
     }
 
@@ -280,7 +280,7 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(mirrorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(mirrorModel));
         glUniform4f(glGetUniformLocation(mirrorShader.ID, "mirrorColor"), 0.5f, 0.5f, 0.7f, 0.4f);
         mirrorVAO.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, sizeof(mirrorIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
         mirrorVAO.Unbind();
 
         glDisable(GL_BLEND);
